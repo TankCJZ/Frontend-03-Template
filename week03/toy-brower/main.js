@@ -9,12 +9,11 @@ void async function () {
     path: "/",
     headers: {
       ["X-Foo2"]: "costumed"
-    },
+    }, 
     body: {
       name: "zhangsan"
     }
   });
-
   let response = await request.send();
   // 解析html
   let dom = Parser.parseHTML(response.body);
