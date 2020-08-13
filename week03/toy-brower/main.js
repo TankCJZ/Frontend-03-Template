@@ -1,5 +1,5 @@
 const Request = require('./Request.js');
-const Parser = require('./Parser.js');
+const Parser = require('./Parser5.js');
 
 void async function () {
   let request = new Request({

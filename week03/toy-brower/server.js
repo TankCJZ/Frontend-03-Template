@@ -19,6 +19,16 @@ http.createServer((request, response) => {
     <html lang="en">
       <head>
       </head>
+      <style>
+        html{
+          font-size: 12px;
+        }
+        h2{
+          color: #fff;
+          font-size: 29px;
+          height: 100px;
+        }
+      </style>
       <body>
         <h2>hello</h2>
       </body>

@@ -1,12 +1,82 @@
-// HTML解析 | 处理属性 课堂作业
+// CSS计算 | 收集CSS规则 代码
+const css = require('css');
 const EOF = Symbol("EOF"); // 定义结束状态
-let currentToken = null, currentAttribute = null;
+let currentToken = null; // 当前token
+let currentAttribute = null; // 当前属性对象
+let currentTextNode = null; // 当前文本节点
+
+let stack = [{type: "document", children: []}]; // 定义栈
+
+
+let rules = []; //存放style规则表
+// 处理 style 规则
+function addCSSRules(text) {
+  let ast = css.parse(text);
+  rules.push(...ast.stylesheet.rules);
+}
+
 
 // 处理token
 function emit(token) {
-  if (token.type !== "text") {
-    console.log(token)
+ 
+  let top = stack[stack.length - 1];
+
+  // 开始节点处理
+  if (token.type === 'startTag') {
+    let element = {
+      type: 'element',
+      children: [],
+      attributes: [],
+    };
+
+    // 处理标签名
+    element.tagName = token.tagName;
+
+    // 处理属性
+    for (const p in token) {
+      if (p !== 'type' && p !== 'tagName') {
+        element.attributes.push({
+          name: p,
+          value: token[p],
+        });
+      }
+    }
+
+    // 建立父子关系
+    top.children.push(element);
+    element.parent = top;
+
+    if (!token.isSelfClosing) {
+      stack.push(element);
+    }
+
+    currentTextNode = null;
+
+  } else if (token.type === 'endTag') {
+    // 结束节点
+    if (top.tagName !== token.tagName) {
+      throw new Error("Tag start end doesn't match!");
+    } else {
+      //=========处理 style 标签样式==========//
+      if (top.tagName === 'style') {
+        addCSSRules(top.children[0].content);
+      }
+      stack.pop();
+    }
+    currentTextNode = null;
+
+  } else if (token.type === 'text') {
+    // 文本节点
+    if (currentTextNode === null) {
+      currentTextNode = {
+        type: 'text',
+        content: ''
+      };
+      top.children.push(currentTextNode);
+    }
+    currentTextNode.content += token.content;
   }
+
 }
 
 // 状态机 初始状态
@@ -88,7 +158,7 @@ function tagName(c) {
     emit(currentToken);
     return data;
   } else {
-    currentToken.tagName += c; // TODO:和下一课不一致
+    currentToken.tagName += c;
     return tagName;
   }
 }
@@ -99,7 +169,7 @@ function beforeAttributeName(c) {
     // 下一个属性
     return beforeAttributeName;
   } else if (c === '/' || c === '>' || c === EOF) {
-    // TODO: 和下一课不一致
+
     return afterAttributeName(c);
   } else if (c === '=') {
     // 异常
@@ -269,5 +339,4 @@ module.exports.parseHTML = function parseHTML(html) {
   }
 
   state = state(EOF);
-
 }

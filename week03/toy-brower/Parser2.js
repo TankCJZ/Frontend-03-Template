@@ -1,12 +1,57 @@
-// HTML解析 | 处理属性 课堂作业
+// HTML解析 | 用token构建DOM树 课堂代码
 const EOF = Symbol("EOF"); // 定义结束状态
-let currentToken = null, currentAttribute = null;
+let currentToken = null; // 当前token
+let currentAttribute = null; // 当前属性对象
+
+let stack = [{type: "document", children: []}]; // 定义栈
 
 // 处理token
 function emit(token) {
-  if (token.type !== "text") {
-    console.log(token)
+  if (token.type === "text") {
+    return;
   }
+  let top = stack[stack.length - 1];
+
+  if (token.type === 'startTag') {
+    let element = {
+      type: 'element',
+      children: [],
+      attributes: [],
+    };
+
+    // 处理标签名
+    element.tagName = token.tagName;
+
+    // 处理属性
+    for (const p in token) {
+      if (p !== 'type' && p !== 'tagName') {
+        element.attributes.push({
+          name: p,
+          value: token[p],
+        });
+      }
+    }
+
+    // 建立父子关系
+    top.children.push(element);
+    element.parent = top;
+
+    if (!token.isSelfClosing) {
+      stack.push(element);
+    }
+
+    currentToken = null;
+
+  } else if (token.type === 'endTag') {
+    if (top.tagName !== token.tagName) {
+      throw new Error("Tag start end doesn't match!");
+    } else {
+      stack.pop();
+    }
+    currentToken = null;
+
+  }
+
 }
 
 // 状态机 初始状态
@@ -88,7 +133,7 @@ function tagName(c) {
     emit(currentToken);
     return data;
   } else {
-    currentToken.tagName += c; // TODO:和下一课不一致
+    currentToken.tagName += c;
     return tagName;
   }
 }
@@ -99,7 +144,7 @@ function beforeAttributeName(c) {
     // 下一个属性
     return beforeAttributeName;
   } else if (c === '/' || c === '>' || c === EOF) {
-    // TODO: 和下一课不一致
+
     return afterAttributeName(c);
   } else if (c === '=') {
     // 异常
