@@ -17,5 +17,4 @@ void async function () {
   let response = await request.send();
   // 解析html
   let dom = Parser.parseHTML(response.body);
-
 }();

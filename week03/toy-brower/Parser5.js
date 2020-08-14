@@ -1,6 +1,5 @@
 // CSS计算 | 添加调用 + CSS计算 | 获取父元素序列 + CSS计算 | 选择器与元素的匹配 代码
 const css = require('css');
-const { match } = require('assert');
 const EOF = Symbol("EOF"); // 定义结束状态
 let currentToken = null; // 当前token
 let currentAttribute = null; // 当前属性对象
@@ -19,7 +18,7 @@ function addCSSRules(text) {
 // 计算css
 function computeCSS(element) {
   // 复制一份stack 并且 倒叙
-  const elements = stack.slice().reverse();
+  let elements = stack.slice().reverse();
 
   if (!element.computedStyle) {
     element.computedStyle = {};
@@ -45,14 +44,35 @@ function computeCSS(element) {
     }
 
     if (matched) {
-      console.log('匹配到了')
+      console.log('匹配到了');
     }
   }
 
 }
 
+// 匹配 支持简单选择器 .element #element element
 function match(element, selector) {
-  
+  if (!selector || !element.attributes) {
+    return false;
+  }
+
+  let char = selector.charAt(0);
+  if (char === "#") {
+    let attr = element.attributes.filter(attr => attr.name === "id")[0];
+    if (attr && attr.value === selector.replace("#", "")); {
+      return true;
+    }
+  } else if (char === ".") {
+    let attr = element.attributes.filter(attr => attr.name === "class")[0];
+    if (attr && attr.value === selector.replace(".", "")); {
+      return true;
+    }
+  } else {
+    if (element.tagName === selector) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // 处理token
