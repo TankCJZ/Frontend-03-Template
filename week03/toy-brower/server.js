@@ -20,28 +20,21 @@ http.createServer((request, response) => {
       <head>
       </head>
       <style>
-        html{
+        div .name{
           font-size: 12px;
         }
-        #h2{
+        #title{
           color: #fff;
           font-size: 29px;
           height: 100px;
         }
-        .title a{
-          font-size: 12px;
-        }
-        .user .name{
-          font-size: 12px;
-        }
       </style>
       <body>
-        <h2 id="h2">hello</h2>
-        <div class="title">
-          <a>111</a>
-        </div>
-        <div class="user">
-          <a class="name">username</a>
+        <div>
+          <h2 id="title">hello</h2>
+          <div class="user">
+            <span class="name">zhansan</span>
+          </div>
         </div>
       </body>
       </html>

@@ -15,26 +15,65 @@ function addCSSRules(text) {
   rules.push(...ast.stylesheet.rules);
 }
 
+// 计算css 优先级
+function specificity(selector) {
+  let p = [0, 0, 0, 0];
+  let selectorParts = selector.split(' ')
+  for (let part of selectorParts) {
+    if (part.charAt(0) === '#') {
+      p[1] += 1
+    } else if (part.charAt(0) === '.') {
+      p[2] += 1
+    } else {
+      p[3] += 1
+    }
+  }
+  return p
+}
+
+function compare(sp1, sp2) {
+  if (sp1[0] - sp2[0]) {
+    return sp1[0] - sp2[0]
+  }
+  if (sp1[1] - sp2[1]) {
+    return sp1[1] - sp2[1]
+  }
+  if (sp1[2] - sp2[2]) {
+    return sp1[2] - sp2[2]
+  }
+  return sp1[3] - sp2[3]
+}
+
 // 计算css
 function computeCSS(element) {
-  // 复制一份stack 并且 倒叙
-  let elements = stack.slice().reverse();
-
+  let elements = stack.slice().reverse()
   if (!element.computedStyle) {
-    element.computedStyle = {};
+    element.computedStyle = {}
   }
 
-  for (const rule of rules) {
-    let selectorParts = rule.selectors[0].split(" ").reverse();
 
+  for (let rule of rules) {
+    let selectorParts = rule.selectors[0].split(' ').reverse();
+
+    // 复合选择器
+    // let matchReg = rule.selectors[0].match(/^[a-zA-Z]{1}[a-zA-Z0-9]*|\.[a-zA-Z]{1}[a-zA-Z0-9]*|#[a-zA-Z0-9]+$/g);
+    // if (matchReg && matchReg.length > 1) {
+    //   if (Array.from(matchReg).every(selector => match(element, selector)) === false) {
+    //     continue;
+    //   }
+    // }
+
+    // 先匹配了当前元素，所以后面j为1
     if (!match(element, selectorParts[0])) {
       continue;
     }
 
     let matched = false;
+
     let j = 1;
-    for(let i = 0; i < elements.length; i++) {
-      if (match(elements[i], selectorParts[i])) {
+    for (let i = 0; i < elements.length; i++) {
+      // elements[i]是element的祖先元素
+      if (match(elements[i], selectorParts[j])) {
         j++;
       }
     }
@@ -44,11 +83,24 @@ function computeCSS(element) {
     }
 
     if (matched) {
-      console.log('匹配到了');
+      let sp = specificity(rule.selectors[0])
+      let computedStyle = element.computedStyle
+      for (let declaration of rule.declarations) {
+        if (!computedStyle[declaration.property]) {
+          computedStyle[declaration.property] = {};
+        }
+        if (!computedStyle[declaration.property].specificity) {
+          computedStyle[declaration.property].value = declaration.value;
+          computedStyle[declaration.property].specificity = sp
+        } else if (compare(computedStyle[declaration.property].specificity, sp) < 0) {
+          computedStyle[declaration.property].value = declaration.value
+          computedStyle[declaration.property].specificity = sp
+        }
+      }
     }
   }
-
 }
+
 
 // 匹配 支持简单选择器 .element #element element
 function match(element, selector) {
@@ -56,15 +108,14 @@ function match(element, selector) {
     return false;
   }
 
-  let char = selector.charAt(0);
-  if (char === "#") {
-    let attr = element.attributes.filter(attr => attr.name === "id")[0];
-    if (attr && attr.value === selector.replace("#", "")); {
+  if (selector.charAt(0) === "#") {
+    let attr = element.attributes.filter(attr => attr.name === 'id')[0];
+    if (attr && attr.value === selector.replace("#", "")) {
       return true;
     }
-  } else if (char === ".") {
-    let attr = element.attributes.filter(attr => attr.name === "class")[0];
-    if (attr && attr.value === selector.replace(".", "")); {
+  } else if (selector.charAt(0) === ".") {
+    let attr = element.attributes.filter(attr => attr.name === 'class')[0]
+    if (attr && attr.value === selector.replace('.', '')) {
       return true;
     }
   } else {
@@ -106,7 +157,7 @@ function emit(token) {
 
     // 建立父子关系
     top.children.push(element);
-    element.parent = top;
+    //element.parent = top;
 
     if (!token.isSelfClosing) {
       stack.push(element);
@@ -173,10 +224,6 @@ function tagOpen(c) {
       type: 'startTag',
       tagName: '',
     };
-    // emit({
-    //   type: 'startTag',
-    //   tagName: '',
-    // });
     return tagName(c);
   } else {
     return;
@@ -260,7 +307,7 @@ function afterAttributeName(c) {
   } else if (c === EOF) {
 
   } else {
-    currentToken[currentAttribute.name] = currentAttribute.value;
+    //currentToken[currentAttribute.name] = currentAttribute.value;
     currentAttribute = {
       name: '',
       value: '',
@@ -399,6 +446,6 @@ module.exports.parseHTML = function parseHTML(html) {
   for (const c of html) {
     state = state(c);
   }
-
   state = state(EOF);
+  return stack[0];
 }
