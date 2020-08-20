@@ -3,26 +3,33 @@ function Layout(element) {
     return;
   }
 
-  const elementStyle = getStyle(element);
+  // 获取style
+  let elementStyle = getStyle(element);
 
+  // 只处理flex 布局
   if (elementStyle.display !== 'flex') {
     return;
   }
 
+  // 过滤文本节点
   let items = element.children.filter(e => e.type === 'element');
 
+  // 排序
   items.sort((a, b) => {
     return (a.order || 0) - (b.order || 0);
   })
 
+  // 取出style
   let style = elementStyle;
 
+  // 将width height 属性设置为null
   ['width', 'height'].forEach(size => {
     if (style[size] === 'auto' || style[size] === '') {
       style[size] = null;
     }
   })
 
+  // 设置默认值
   if (!style.flexDirection || style.flexDirection === 'auto') {
     style.flexDirection = 'row';
   }
@@ -33,7 +40,7 @@ function Layout(element) {
     style.justifyContent = 'flex-start';
   }
   if (!style.flexWrap || style.flexWrap === 'auto') {
-    style.flexDirection = 'nowrap';
+    style.flexWrap = 'nowrap';
   }
   if (!style.alignContent || style.alignContent === 'auto') {
     style.alignContent = 'stretch';
@@ -109,18 +116,279 @@ function Layout(element) {
     crossBase = 0;
     crossSign = 1;
   }
+  
+  // 收集元素到行
+  // TODO: 未编写完成
+  let isAutoMainSize = false;
+  if (!style[mainSize]) {
+    elementStyle[mainSize] = 0;
+    for (let i=0; i< items.length; i++) {
+      let item = items[i];
+      let itemStyle = getStyle(item);
+      if (itemStyle[mainSize] !== null || itemStyle[mainSize]) {
+        elementStyle[mainSize] = elementStyle[mainSize];
+      }
+    }
+    isAutoMainSize = true;
+  }
+
+  let flexLine = [];
+  let flexLines = [flexLine];
+
+  let mainSpace = elementStyle[mainSize];
+  let crossSpace = 0;
+
+  for (let i = 0; i< items.length; i++) {
+    let item = items[i];
+    let itemStyle = getStyle(item);
+
+    if (itemStyle[mainSize] === null) {
+      itemStyle[mainSize] = 0;
+    }
+
+    if (itemStyle.flex) {
+      flexLine.push(item);
+    } else if (style.flexWrap === 'nowrap' && isAutoMainSize) {
+      mainSpace -= itemStyle[mainSize];
+      if (itemStyle[crossSize] !== null && itemStyle[crossSize]) {
+        crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
+      }
+      flexLine.push(item);
+    } else {
+      if (itemStyle[mainSize] > style[mainSize]) {
+        itemStyle[mainSize] = style[mainSize];
+      }
+      if (mainSpace <  itemStyle[mainSize]) {
+        flexLine.mainSpace = mainSpace;
+        flexLine.crossSpace = crossSpace;
+        flexLine = [item];
+        flexLines.push(flexLine);
+        mainSpace = style[mainSize];
+        crossSpace = 0;
+
+      } else {
+        flexLine.push(item);
+      }
+
+      if (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
+        crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
+      }
+
+      mainSpace -= itemStyle[mainSize];
+    }
+  }
+
+  flexLine.mainSpace = mainSpace;
+
+  // 计算主轴
+  if (style.flexWrap === 'nowrap' || isAutoMainSize) {
+    flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : crossSpace;
+  } else {
+    flexLine.crossSpace = crossSpace;
+  }
+
+  if (mainSpace < 0) {
+    let scale = style[mainSize] / (style[mainSize] - mainSpace);
+    let currentMain = mainBase;
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i];
+      let itemStyle = getStyle(item);
+      
+      if (itemStyle.flex) {
+        itemStyle[mainSize] = 0;
+      }
+
+      itemStyle[mainSize] = itemStyle[mainSize] * scale;
+
+      itemStyle[mainStart] = currentMain;
+      itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+      currentMain = itemStyle[mainEnd];
+
+    }
+  } else {
+
+    flexLines.forEach(items => {
+      let mainSpace = items.mainSpace;
+      let flexTotal = 0;
+      for (let i=0; i< items.length; i++) {
+        let item = items[i];
+        let itemStyle = getStyle(item);
+
+        if ((itemStyle.flex !== null) && (itemStyle.flex !== (void 0))) {
+          flexTotal += itemStyle.flex;
+          continue;
+        }
+
+      }
+
+      if (flexTotal > 0) {
+        let currentMain = mainBase;
+        for (let i = 0; i < items.length; i++) {
+          let item = items[i];
+          let itemStyle = getStyle(item);
+
+          if (itemStyle.flex) {
+            itemStyle[mainSize] = (mainSpace / flexTotal) * itemStyle.flex;
+          }
+          itemStyle[mainStart] = currentMain; 
+          itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+          currentMain = itemStyle[mainEnd];
+        }
+      } else {
+        if (style.justifyContent === 'flex-start') {
+          let currentMain = mainBase;
+          let step = 0;
+        }
+        if (style.justifyContent === 'flex-end') {
+          let currentMain = mainSpace * mainSign + mainBase;
+          let step = 0;
+        }
+        if (style.justifyContent === 'center') {
+          let currentMain = mainSpace / 2 * mainSign + mainBase;
+          let step = 0;
+        }
+        if (style.justifyContent === 'space-between') {
+          let step = mainSpace / (items.length - 1) * mainSign;
+          let currentMain = mainBase;
+        }
+        if (style.justifyContent === 'space-around') {
+          let step = mainSpace / items.length * mainSign;
+          let currentMain = step / 2 + mainBase;
+        }
+        for (let i = 0; i < items.length; i++) {
+          let item = items[i];
+          itemStyle[mainStart, currentMain];
+          itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+          currentMain = itemStyle[mainEnd] + step;
+        }
+      }
+    })
+
+  }
+
+  // 计算交叉轴
+  if (!style[crossSize]) {
+    crossSpace = 0;
+    elementStyle[crossSize] = 0;
+    for (let i = 0; i < flexLines.length; i++) {
+      elementStyle[crossSize] = elementStyle[crossSize] + flexLines[i].crossSpace;
+    }
+  } else {
+    crossSpace = style[crossSize];
+    for (let i = 0; i<flexLines.length; i++) {
+      crossSpace -= flexLines[i].crossSpace;
+    }
+  }
+
+  if (style.flexWrap === 'wrap-reverse') {
+    crossBase = style[crossSize];
+  } else {
+    crossBase = 0;
+  }
+
+  let lineSize = style[crossSize] / flexLines.length;
+  let step;
+  if (style.alignContent === 'flex-start') {
+    crossBase += 0;
+    step = 0;
+  }
+  if (style.alignContent === 'flex-end') {
+    crossBase += crossSign * crossSpace;
+    step = 0;
+  }
+  if (style.alignContent === 'center') {
+    crossBase += crossSign * crossSpace / 2;
+    step = 0;
+  }
+
+  if (style.alignContent === 'space-between') {
+    crossBase += 0;
+    step = crossSpace / (flexLines.length - 1);
+  }
+
+  if (style.alignContent === 'space-around') {
+    step = crossSpace / (flexLines.length);
+    crossBase += crossSign * step / 2;
+  }
+
+  if (style.alignContent === 'stretch') {
+    crossBase += 0;
+    step = 0;
+  }
+
+  flexLines.forEach(items => {
+    let lineCrossSize = style.alignContent === 'stretch' ? 
+      items.crossSpace + crossSpace / flexLines.length : 
+      items.crossSpace;
+
+      for (let i = 0; i<items.length; i++) {
+        let item = items[i];
+        let itemStyle = getStyle(item);
+
+        let align = itemStyle.alignSelf || style.alignItems;
+
+        if (item === null) {
+          itemStyle[crossSize] = (align === 'stretch') ? 
+          lineCrossSize : 0;
+        }
+
+        if (align === 'flex-start') {
+          itemStyle[crossStart] = crossBase;
+          itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * itemStyle[crossSize];
+        }
+
+        if (align === 'flex-end') {
+          itemStyle[crossEnd] = crossBase + crossSign * lineCrossSize;
+          itemStyle[crossStart] =  itemStyle[crossEnd] - crossSign * itemStyle[crossSize];
+        }
+
+        if (align === 'center') {
+          itemStyle[crossStart] = crossBase + crossSign * (lineCrossSize - itemStyle[crossSize] / 2);
+          itemStyle[crossEnd] =  itemStyle[crossStart] + crossSign * itemStyle[crossSize];
+        }
+
+        // TODO: 代码未完成
+        if (align === 'stretch') {
+          itemStyle[crossStart] = crossBase;
+          itemStyle[crossEnd] =  crossBase + crossSign * (())
+          itemStyle[crossSize] = crossSign * (itemStyle[crossSize])
+        }
+        
+      }
+
+      crossBase += crossSign * (lineCrossSize + step);
+
+
+  });
+
+
 
 }
+// 获取节点的样式
 function getStyle(element) {
   if (!element.style) {
-    return;
+    element.style = {};
   }
 
   for (let prop in element.computedStyle) {
     let p = element.computedStyle.value;
 
     element.style[prop] = element.computedStyle[prop].value;
+
+    // 处理px单位 转换成数字
+    let propString = element.style[prop].toString();
+    if (propString.match(/px$/)) {
+      element.style[prop] = parseInt(element.style[prop]);
+    }
+    // 将字符串字数转换成 数字类型
+    if (propString.match(/^[0-9\.]+$/)) {
+      element.style[prop] = parseInt(element.style[prop]);
+    }
+
   }
+
+  return element.style;
+
 }
 
 module.exports = Layout;
