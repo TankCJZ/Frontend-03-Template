@@ -20,21 +20,26 @@ http.createServer((request, response) => {
       <head>
       </head>
       <style>
-        div .name{
-          font-size: 12px;
+        #container{
+          width: 500px;
+          height: 500px;
+          display: flex;
+          background: rgb(255,255,255);
         }
-        #title{
-          color: #fff;
-          font-size: 29px;
+        #container #myid{
+          width: 200px;
           height: 100px;
+          background: rgb(255,0,0);
+        }
+        #container .c1{
+          flex: 1;
+          background: rgb(0,255,0);
         }
       </style>
       <body>
-        <div>
-          <h2 id="title">hello</h2>
-          <div class="user">
-            <span class="name">zhansan</span>
-          </div>
+        <div id="container">
+          <div id="myid"></div>
+          <div class="c1"></div>
         </div>
       </body>
       </html>

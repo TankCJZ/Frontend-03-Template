@@ -118,15 +118,14 @@ function Layout(element) {
   }
   
   // 收集元素到行
-  // TODO: 未编写完成
   let isAutoMainSize = false;
   if (!style[mainSize]) {
-    elementStyle[mainSize] = 0;
+    style[mainSize] = 0;
     for (let i=0; i< items.length; i++) {
       let item = items[i];
       let itemStyle = getStyle(item);
-      if (itemStyle[mainSize] !== null || itemStyle[mainSize]) {
-        elementStyle[mainSize] = elementStyle[mainSize];
+      if (itemStyle[mainSize] !== null || itemStyle[mainSize] !== (void 0)) {
+        elementStyle[mainSize] += elementStyle[mainSize];
       }
     }
     isAutoMainSize = true;
@@ -150,7 +149,7 @@ function Layout(element) {
       flexLine.push(item);
     } else if (style.flexWrap === 'nowrap' && isAutoMainSize) {
       mainSpace -= itemStyle[mainSize];
-      if (itemStyle[crossSize] !== null && itemStyle[crossSize]) {
+      if (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
         crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
       }
       flexLine.push(item);
@@ -182,7 +181,7 @@ function Layout(element) {
 
   // 计算主轴
   if (style.flexWrap === 'nowrap' || isAutoMainSize) {
-    flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : crossSpace;
+    flexLine.crossSpace = (style[crossSize] !== (void 0)) ? style[crossSize] : crossSpace;
   } else {
     flexLine.crossSpace = crossSpace;
   }
@@ -235,29 +234,28 @@ function Layout(element) {
           currentMain = itemStyle[mainEnd];
         }
       } else {
+        let step = 0;
         if (style.justifyContent === 'flex-start') {
-          let currentMain = mainBase;
-          let step = 0;
+          currentMain = mainBase;
         }
         if (style.justifyContent === 'flex-end') {
-          let currentMain = mainSpace * mainSign + mainBase;
-          let step = 0;
+          currentMain = mainSpace * mainSign + mainBase;
         }
         if (style.justifyContent === 'center') {
-          let currentMain = mainSpace / 2 * mainSign + mainBase;
-          let step = 0;
+          currentMain = (mainSpace / 2) * mainSign + mainBase;
         }
         if (style.justifyContent === 'space-between') {
-          let step = mainSpace / (items.length - 1) * mainSign;
-          let currentMain = mainBase;
+          step = mainSpace / (items.length - 1) * mainSign;
+          currentMain = mainBase;
         }
         if (style.justifyContent === 'space-around') {
-          let step = mainSpace / items.length * mainSign;
-          let currentMain = step / 2 + mainBase;
+          step = mainSpace / items.length * mainSign;
+          currentMain = step / 2 + mainBase;
         }
         for (let i = 0; i < items.length; i++) {
           let item = items[i];
-          itemStyle[mainStart, currentMain];
+          let itemStyle = getStyle(item);
+          itemStyle[mainStart] = currentMain;
           itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
           currentMain = itemStyle[mainEnd] + step;
         }
@@ -287,7 +285,7 @@ function Layout(element) {
   }
 
   let lineSize = style[crossSize] / flexLines.length;
-  let step;
+  let step = 0;
   if (style.alignContent === 'flex-start') {
     crossBase += 0;
     step = 0;
@@ -347,21 +345,17 @@ function Layout(element) {
           itemStyle[crossEnd] =  itemStyle[crossStart] + crossSign * itemStyle[crossSize];
         }
 
-        // TODO: 代码未完成
         if (align === 'stretch') {
           itemStyle[crossStart] = crossBase;
-          itemStyle[crossEnd] =  crossBase + crossSign * (())
-          itemStyle[crossSize] = crossSign * (itemStyle[crossSize])
+          itemStyle[crossEnd] =  crossBase + crossSign * (itemStyle[crossSize] || lineCrossSize);
+          itemStyle[crossSize] = crossSign * (itemStyle[crossEnd] - itemStyle[crossStart]);
         }
         
       }
 
       crossBase += crossSign * (lineCrossSize + step);
 
-
   });
-
-
 
 }
 // 获取节点的样式
@@ -371,7 +365,6 @@ function getStyle(element) {
   }
 
   for (let prop in element.computedStyle) {
-    let p = element.computedStyle.value;
 
     element.style[prop] = element.computedStyle[prop].value;
 
