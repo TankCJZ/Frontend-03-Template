@@ -10,25 +10,25 @@ XHTML与HTML不同之处在于XHTML是一种严格模式的HTML
 文档中定义nbsp来表示空格，通常不推荐这种写法，因为会造成分词的问题，推荐使用CSS中white-space来显示空格  
 
 ## HTML标签语义
-aside: 则边栏
-main: 主体内容，一个页面只有一个main标签
-article: 文章
-hx: 标题
-hgroup: 标题集合 主标题和子标题结合 子元素只能是hx
-p: 段落
-abbr: 标记一个缩写
-strong: 加粗效果，表示重点内容
-em: 加粗效果，表示读音上的强调
-li: 列表的每一项
-ol: 有序列表
-ul: 无须列表
-nav: 导航
-div: 独立区域
-dfn: 特殊语句或短语的定义
-pre: 格式文本通常用于显示 源代码
-code: 计算机代码
-footer: 文档或者文章的页脚内容
-header: 文档或者文章的介绍内容
+* aside: 则边栏  
+* main: 主体内容，一个页面只有一个main标签  
+* article: 文章
+* hx: 标题
+* hgroup: 标题集合 主标题和子标题结合 子元素只能是hx
+* p: 段落
+* abbr: 标记一个缩写
+* strong: 加粗效果，表示重点内容
+* em: 加粗效果，表示读音上的强调
+* li: 列表的每一项
+* ol: 有序列表
+* ul: 无须列表
+* nav: 导航
+* div: 独立区域
+* dfn: 特殊语句或短语的定义
+* pre: 格式文本通常用于显示 源代码
+* code: 计算机代码
+* footer: 文档或者文章的页脚内容
+* header: 文档或者文章的介绍内容
 
 ## HTML的语法
 + `<tagname></tagname>` 普通节点
