@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三子棋</title>
+
+  <style>
+    .box {
+      width: 100px;
+      height: 100px;
+      font-size: 50px;
+      line-height: 100px;
+      display: inline-block;
+      vertical-align: middle;
+      border: 1px solid white;
+      background: green;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="board"></div>
+
+  <script>
+    const pattern = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0]
+    ]; // 0 空 1⭕  2 ❌
+    let color = 2;
+
+    // 创建棋盘
+    function show() {
+      let board = document.querySelector('#board');
+      board.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          let box = document.createElement('div');
+          box.classList.add('box');
+          box.innerText =
+            pattern[i][j] === 2 ? '❌' :
+              pattern[i][j] === 1 ? '⭕' : '';
+
+          box.addEventListener('click', () => userMove(i, j))
+          board.appendChild(box);
+
+        }
+        board.appendChild(document.createElement('br'))
+      }
+    }
+
+    // 棋盘点击事件绑定
+    function userMove(x, y) {
+      if (pattern[x][y] > 0) return;
+      pattern[x][y] = color;
+      if (check(pattern, color)) {
+        alert(`${color === 2 ? '❌' : '⭕'} is winner`)
+      }
+      // 检测下一步谁将会赢 
+      // if (willWin(pattern, color)) {
+      //   console.log(`${color === 2 ? '❌' : '⭕'} will winner`)
+      // }
+      color = 3 - color;
+      show();
+      computeMove();
+      // 检测下一步谁将会赢 
+      // if (willWin(pattern, color)) {
+      //   console.log(`${color === 2 ? '❌' : '⭕'} will winner`)
+      // }
+    }
+
+    function computeMove() {
+      let choice = bastChioce(pattern, color);
+      if (choice.point) {
+        pattern[choice.point[1]][choice.point[0]] = color;
+      }
+      if (check(pattern, color)) {
+        alert(`${color === 2 ? '❌' : '⭕'} is winner`);
+      }
+      color = 3 - color;
+      show();
+    }
+
+    // 检测谁将会赢-初版AI
+    function willWin(pattern, color) {
+      for (let i = 0; i < pattern.length; i++) {
+        for (let j = 0; j < pattern.length; j++) {
+          if (pattern[i][j]) {
+            continue;
+          }
+          let clonePattern = clone(pattern);
+          clonePattern[i][j] = color;
+          if (check(clonePattern, color)) {
+            return [j, i];
+          }
+        }
+      }
+      return null;
+    }
+
+    // 最佳策略
+    function bastChioce(pattern, color) {
+      let p;
+      if (p = willWin(pattern, color)) {
+        return {
+          point: p,
+          result: 1,
+        }
+      }
+      let result = -2;
+      let point = null;
+      outer:for (let i = 0; i < pattern.length; i++) {
+        for (let j = 0; j < pattern.length; j++) {
+          if (pattern[i][j]) {
+            continue;
+          }
+          let tmp = clone(pattern);
+          tmp[i][j] = color;
+          let r = bastChioce(tmp, 3 - color).result;
+
+          if (-r > result) {
+            result = -r;
+            point = [j, i];
+          }
+
+          if (result === 1) {
+            break outer;
+          }
+        }
+      }
+      return {
+        point: point,
+        result: point ? result : 0,
+      }
+    }
+
+    // 克隆对象
+    function clone(pattern) {
+      return JSON.parse(JSON.stringify(pattern));
+    }
+
+    // 判断胜负
+    function check(pattern, color) {
+      // 横轴
+      for (let i = 0; i < pattern.length; i++) {
+        let win = true;
+        for (let j = 0; j < pattern.length; j++) {
+          if (pattern[i][j] !== color) {
+            win = false;
+          }
+        }
+        if (win) return true;
+      }
+      // 纵轴
+      for (let i = 0; i < pattern.length; i++) {
+        let win = true;
+        for (let j = 0; j < pattern.length; j++) {
+          if (pattern[j][i] !== color) {
+            win = false;
+          }
+        }
+        if (win) return true;
+      }
+      // 右斜
+      {
+        let win = true;
+        for (let i = 0; i < pattern.length; i++) {
+          if (pattern[i][i] !== color) {
+            win = false;
+          }
+        }
+        if (win) return true;
+      }
+      // 左斜
+      {
+        let win = true;
+        for (let i = 0; i < pattern.length; i++) {
+          if (pattern[i][2 - i] !== color) {
+            win = false;
+          }
+        }
+        if (win) return true;
+      }
+      return false;
+    }
+
+    // 创建棋盘
+    show();
+  </script>
+</body>
+
+</html>

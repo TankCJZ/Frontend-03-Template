@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        div{
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: gray;
+            display: inline-block;
+            margin: 0 20px;
+        }
+        .green.active{
+            background: green;
+        }
+        .red.active{
+            background: red;
+        }
+        .yellow.active{
+            background: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div class="green"></div>
+    <div class="yellow"></div>
+    <div class="red"></div>
+
+    <button id="next">next</button>
+    <script>
+       function sleep(time) {
+           return new Promise((resolve, reject) => {
+                setTimeout(resolve, time);        
+           })
+       } 
+
+       function reset() {
+           document.querySelectorAll('div')
+            .forEach(item => {
+                item
+                .classList
+                .remove('active')
+            })
+       }
+
+       function red() {
+           reset();
+           document.querySelector('div.red').classList
+           .add('active')
+       }
+
+       function yellow() {
+           reset();
+           document.querySelector('div.yellow')
+            .classList
+            .add('active');
+       }
+
+       function green() {
+           reset();
+           document.querySelector('div.green')
+            .classList
+            .add('active');
+       }
+
+       // 手动控制
+       function happen(ele, eventName) {
+            return new Promise((resolve, reject) => {
+                ele.addEventListener(eventName, resolve, {once: true})
+            });
+       }
+
+       async function go() {
+           while(true) {
+                green();
+                await sleep(10000);
+                yellow();
+                await sleep(1000);
+                red();
+                await sleep(3000);
+           }
+       }
+
+       async function go2() {
+        while(true) {
+                green();
+                await happen(document.getElementById('next'), 'click');
+                yellow();
+                await happen(document.getElementById('next'), 'click');
+                red();
+                await happen(document.getElementById('next'), 'click');
+           }
+       }
+
+
+
+    </script>
+
+</body>
+</html>
