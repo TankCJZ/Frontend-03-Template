@@ -235,13 +235,18 @@ clear.onclick = function () {
 
 > 注意：如果使用递归112345...则是一个深度优先算法了，寻路应该使用广度优先
 
+定义一个sleep函数，用来延迟执行  
 ```javascript
 async function sleep(time) {
   return new Promise((resolve, reject) => {
     setTimeout(resolve, time);
   })
 }
-
+```
+编写寻路函数path  接受map地图数据，起点(start) 和 目标点位置(end)   
+函数中定义一个队列存放地图点，并且循环取出地图点来判断是否找到了目标点，如果没有找到则继续寻找周围4个点   
+insert函数 会高亮显示当前已经走过的点，并且标记为2,继续将点加入到队列中
+```javascript
 /**
  * @description: 寻路 第一版
  * @param map {Array} 地图数据 
@@ -366,7 +371,6 @@ while (queue.length) {
   // ...
 }
 ```
-
 <img src="https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/08/1.gif" width = "600" height = "auto" alt="图片名称" align=center />
 
 ### 启发式搜索
