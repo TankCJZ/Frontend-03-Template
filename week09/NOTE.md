@@ -12,17 +12,44 @@
 5.点击保存按钮 保存数据到缓存中   
 6.清除地图数据   
 
-```javascript
 
-let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0);
-let container = document.getElementById('map');
+首页需要创建一个100*100个格子的地图   
+先简单定义地图样式   
+```html
+<style>
+  *{
+    margin: 0;
+    padding: 0;
+  }
+  #map{
+    width: 800px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .box{
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+    vertical-align: top;
+    background-color: #eee;
+    border: 1px solid #e1e2e3;
+  }
+</style>
+```
+定义一些变量   
+```javascript
+let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0); // 地图数据
+let container = document.getElementById('map'); 
 let save = document.getElementById('save');
 let clear = document.getElementById('clear');
 
-let isMousedown = false;
-let isClear = false;
+let isMousedown = false; //是否是鼠标按下
+let isClear = false; //是否是清除状态
 ```
-> 地图数据一维数组 每项值为0表示未绘制 1表示已经绘制
+接着编写绘制地图函数render   
+给container增加100*100个div增加box样式，给每一个div增加鼠标移动监听，鼠标按下后右键为清楚左键为绘制   
+地图数据一维数组 每项值为0表示未绘制 1表示已经绘制   
+小技巧：使用了两层100*100循环，并且 用 循环长度 100 * y + x 来获取当前数组下标    
 ```javascript
 // 绘制函数 
 function render(map) {
@@ -56,8 +83,9 @@ function render(map) {
   }
 }
 ```
-> 小技巧：使用了两层100*100循环，并且 用 循环长度 100 * y + x 来获取当前数组下标
 
+监听鼠标按下和鼠标松开   
+鼠标使用到右键清除画布，所以需要把浏览器默认右键菜单禁用
 ```javascript
 //鼠标按下
 document.addEventListener('mousedown', e => {
@@ -73,8 +101,8 @@ document.addEventListener('contextmenu', e => {
   e.preventDefault();
 });
 ```
-> 鼠标使用到右键清除画布，所以需要把浏览器默认右键菜单禁用
 
+增加一些保存数据和清楚数据事件   
 ```javascript
 // 保存数据
 save.onclick = function () {
@@ -343,3 +371,63 @@ while (queue.length) {
 <img src="https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/08/1.gif" width = "600" height = "auto" alt="图片名称" align=center />
 
 ### 启发式搜索
+上面的广发式寻路方法并不是最优的方案，那么有更好的方法吗？答案是启发式搜索， 能找到最佳路径的启发式寻路叫做A*,不一定能找到最佳路径寻路叫A   
+显示思路：   
+确保每次走的点和 目标点对比是距离最近的点即可这样形成额路径就是最优路径   
+我们需要修改存放地图的数据结构，我们需要把队列改成按一定优先级提供位置点的一个数据结构，我们写一个Sorted类来处理这种数据结构   
+```javascript
+class Sorted {
+  constructor(data, compare) {
+    this.data = data.slice(); //复制一份地图数据
+    // 设置比较函数 默认使用Array.sort
+    this.compare = compare || ((a, b) => a - b);
+  }
+  // 定义取出数据点函数 取出最小值
+  take() {
+    if (!this.data.length) {
+      return;
+    }
+    // 定义默认最小点
+    let min = this.data[0];
+    // 定义默认最小点位置
+    let minIndex = 0;
+    for (let i = 0; i < this.data.length; i++) {
+      if (this.compare(this.data[i], min) < 0) {
+        // 保存做小点
+        min = this.data[i];
+        minIndex = i;
+      }
+    }
+
+    // 将最后一个点赋值给最小点，然后将最后点移除，这样就完成了替换操作
+    // 例如：[3,4,1,5] minIndex=2 赋值后： [3,4,5,5]
+    this.data[minIndex] = this.data[this.data.length - 1];
+    //  [3,4,5,5] => [3,4,5]
+    this.data.pop();
+    return min;// min: 1
+  }
+  give(point) {
+    this.data.push(point);
+  }
+}
+```
+接着我们将使用sorted来代替queue   
+```javascript
+let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
+
+function distance(point) {
+  return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+}
+
+// 加值
+queue.give([x, y]);
+
+// 取值
+while (queue.data.length) {
+  let [x, y] = queue.take();
+  //...
+}
+```
+运行效果：   
+
+<img src="https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/08/4.gif" width = "600" height = "auto" alt="图片名称" align=center />
