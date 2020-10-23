@@ -25,12 +25,12 @@ let proxy = new Proxy(obj, {
 proxy.a; // 1.html:18 get: {a: 1, b: 2} a
 proxy.a = 3; // set: {a: 1, b: 2} a 3
 ```
-![](../week12/img/Snipaste_2020-10-23_13-53-56.png)   
+![](https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/Snipaste_2020-10-23_13-53-56.png)   
 Proxy拦截器还包含`has` `deleteProperty` `ownKeys` `apply` `construct` 等。   
 [MDN文档地址]: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy  
 
 ## 模仿vue3.0 reactive实现一
-实现reactive函数   
+下面代码实现reactive函数的一个基本结构   
 ```javascript
 let p1 = reactive({
   a: 1,
@@ -53,13 +53,15 @@ function reactive(object) {
 
 ## 模仿vue3.0 reactive实现二 
 增加监听函数`effect`   
+* 定义`callbacks`数组存放所有`effect`中的回调函数
+* 在`Proxy`中set拦截器中执行`callbacks`
 ```javascript
 
 let p1 = reactive({
   a: 1,
   b: 2
 });
-
+// * 定义`callbacks`数组存放所有`effect`中的回调函数
 let callbacks = [];
 
 function reactive(object) {
@@ -93,8 +95,14 @@ p1.a = 10; // effect 10
 
 ## 模仿vue3.0 reactive实现三
 将`effect`和`reactive`建立关联   
+* 定义`usedReactiveties` 数组存放需要监听的对象和属性信息
+* 在`Proxy`中`set`拦截器中将对象和属性加入数组`usedReactiveties`中
+* 在`Proxy`中`get`拦截器中从收集对象`usedReactiveties`中找到当前对象的监听函数`callback`函数并执行
+* 在`effect`中执行一次callback将触发`usedReactiveties`的收集
+* `usedReactiveties`的收集完成后将回调函数`callback`加入绑定到收集对象中
 ```javascript
 let callbacks = new Map();
+// 定义`usedReactiveties` 数组存放需要监听的对象和属性信息
 let usedReactiveties = [];
 let p1 = reactive({
   a: 1,
@@ -104,6 +112,7 @@ let p1 = reactive({
 function reactive(object) {
   return new Proxy(object, {
     get(obj, prop) {
+      // 在`Proxy`中`set`拦截器中将对象和属性加入数组`usedReactiveties`中
       usedReactiveties.push([obj, prop]);
       return obj[prop];
     },
@@ -112,7 +121,7 @@ function reactive(object) {
 
       if (callbacks.get(obj)) {
         if (callbacks.get(obj).get(prop)) {
-          // 执行保存的effect回调函数
+          // 在`Proxy`中`get`拦截器中从收集对象`usedReactiveties`中找到当前对象的监听函数`callback`函数并执行
           for (let call of callbacks.get(obj).get(prop)) {
             call && call();
           }
@@ -126,6 +135,7 @@ function reactive(object) {
 
 function effect(callback) {
   usedReactiveties = [];
+  // 在`effect`中执行一次callback将触发`usedReactiveties`的收集
   callback();
 
   for(let reactive of usedReactiveties) {
@@ -136,7 +146,7 @@ function effect(callback) {
     if (!callbacks.get(reactive[0]).has(reactive[1])) {
       callbacks.get(reactive[0]).set(reactive[1], []);
     }
-    // 将回调函数加入到reactive中
+    // `usedReactiveties`的收集完成后将回调函数`callback`加入绑定到收集对象中
     callbacks.get(reactive[0]).get(reactive[1]).push(callback);
   }
 }
@@ -338,7 +348,7 @@ effect(() => {
 
 </script>
 ```
-![双向绑定](../week12/img/2.gif)   
+![双向绑定](https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/2.gif)   
 
 ## reactive应用场景-调色板案例
 
@@ -443,7 +453,7 @@ effect(() => {
 
 </script>
 ```
-![双向绑定](../week12/img/3.gif)   
+![双向绑定](https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/3.gif)   
 
 ## 案例-Range实现精准拖拽
 div拖拽实现：   
@@ -600,4 +610,4 @@ drag.addEventListener('mousedown', event => {
 
 </script>
 ```
-![运行效果](../week12/img/4.gif)
+![运行效果](https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/4.gif)
