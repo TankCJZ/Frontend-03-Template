@@ -1,0 +1,108 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-10-23 15:29:34
+ * @LastEditTime: 2020-10-23 15:47:07
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \book-noted:\Frontend-03-Template\week12\2.html
+-->
+<div>
+  红: <input type="range" id="r" value="" min="0" max="255">
+</div>
+<div>
+  绿: <input type="range" id="g" value="" min="0" max="255">
+</div>
+<div>
+  蓝: <input type="range" id="b" value="" min="0" max="255">
+</div>
+<div style="width: 100px; height: 100px;border-radius: 50%;" id='color'></div>
+<style>
+  input{
+  }
+</style>
+<script>
+  
+  let callbacks = new Map();
+  let reactivties = new Map();
+  let usedReactiveties = [];
+
+  let p1 = reactive({
+    r: 0,
+    g: 0,
+    b: 0,
+  });
+
+  const $ = (el) => {
+    return document.querySelector(el);
+  }
+
+  effect(() => {
+    $('#r').value = p1.r;
+  });
+  effect(() => {
+    $('#g').value = p1.g;
+  });
+  effect(() => {
+    $('#b').value = p1.b;
+  });
+
+  $('#r').addEventListener('input', event => p1.r = event.target.value);
+  $('#g').addEventListener('input', event => p1.g = event.target.value);
+  $('#b').addEventListener('input', event => p1.b = event.target.value);
+
+  effect(() => {
+    $('#color').style.backgroundColor = `rgb(${p1.r}, ${p1.g}, ${p1.b})`;
+  });
+  
+
+  function reactive(object) {
+    if (reactivties.has(object)) {
+      return reactivties.get(object);
+    }
+    let proxy = new Proxy(object, {
+      get(obj, prop) {
+        usedReactiveties.push([obj, prop]);
+        if (typeof obj[prop] === 'object') {
+          return reactive(obj[prop]);
+        }
+        return obj[prop];
+      },
+      set(obj, prop, val) {
+        obj[prop] = val;
+
+        if (callbacks.get(obj)) {
+          if (callbacks.get(obj).get(prop)) {
+            // 执行保存的回调函数
+            for (let call of callbacks.get(obj).get(prop)) {
+              call && call();
+            }
+          }
+        }
+
+        return obj[prop];
+      }
+    });
+    
+    reactivties.set(object, proxy);
+
+    return proxy;
+  }
+
+  function effect(callback) {
+    // 将回调函数保存
+    // callbacks.push(callback);
+    usedReactiveties = [];
+    callback();
+
+    for(let reactive of usedReactiveties) {
+      if (!callbacks.has(reactive[0])) {
+        callbacks.set(reactive[0], new Map());
+      }
+      if (!callbacks.get(reactive[0]).has(reactive[1])) {
+        callbacks.get(reactive[0]).set(reactive[1], []);
+      }
+      callbacks.get(reactive[0]).get(reactive[1]).push(callback);
+    }
+  }
+
+</script>
