@@ -348,7 +348,7 @@ effect(() => {
 
 </script>
 ```
-![双向绑定](https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/2.gif)   
+<img src="https://blog-images-file.oss-cn-beijing.aliyuncs.com/week/12/2.gif" />   
 
 ## reactive应用场景-调色板案例
 
