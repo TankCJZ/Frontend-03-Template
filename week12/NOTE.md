@@ -445,5 +445,159 @@ effect(() => {
 ```
 ![双向绑定](../week12/img/3.gif)   
 
-## reactive应用场景-Range实现精准拖拽案例
+## 案例-Range实现精准拖拽
+div拖拽实现：   
+* 监听`mousedown`事件，
+* 在监听事件`mousedown`中绑定`document`的`mousemove`和`mouseup`事件，
+* `mouseup`中移除监听函数，
+* `mousemove`中处理div移动逻辑
+* 确保第二次位置正确，我们需要记录初始位置 `baseX baseY`
+* 在`up`中保存上一次的位置信息`baseX baseY`
+* 在drag`mousedown`事件中记录 按下位置，并在移动中`move`计算出位置偏移加上初始位置得出最终移动位置
+  
+```html
+<div id="drag" style="vertical-align: middle;width: 50px;height: 50px;display: inline-block;background: pink;"></div>
+<script>
+let baseX = 0, baseY = 0;
 
+drag.addEventListener('mousedown', event => {
+  let startX = event.clientX, startY = event.clientY;
+
+  // 移动div
+  const move = event => {
+    drag.style.transform = `translateX(${baseX + event.clientX - startX}px) translateY(${baseY + event.clientY - startY}px)`;
+  }
+
+  // 移除监听
+  const up = event => {
+    baseX = baseX + event.clientX - startX;
+    baseY = baseY + event.clientY - startY;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  }
+
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+
+});
+</script>
+```
+实现将`div`插入到任意的文本位置中   
+* 定义存放range数据数组`ranges`
+* 将所有文本内容添加到`ranges`数组中
+* 在`move`函数中获取到距离div中近的`range`，并将`range`插入到该位置中
+```html
+<div id="content">
+  Proxy 对象用于定义基本操作的自定义行为（如属性查找、赋值、枚举、函数调用等）。术语
+  handler
+  包含捕捉器（trap）的占位符对象，可译为处理器对象。
+  traps
+  提供属性访问的方法。这类似于操作系统中捕获器的概念。
+  target
+  被 Proxy 代理虚拟化的对象。它常被作为代理的存储后端。根据目标验证关于对象不可扩展性或不可配置属性的不变量（保持不变的语义）。
+  语法
+  const p = new Proxy(target, handler)
+  参数
+  target
+  要使用 Proxy 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）。
+  handler
+  一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理 p 的行为。
+  方法
+  Proxy.revocable()
+  创建一个可撤销的Proxy对象。
+  handler 对象的方法
+  handler 对象是一个容纳一批特定属性的占位符对象。它包含有 Proxy 的各个捕获器（trap）。
+  所有的捕捉器是可选的。如果没有定义某个捕捉器，那么就会保留源对象的默认行为。
+  handler.getPrototypeOf()
+  Object.getPrototypeOf 方法的捕捉器。
+  handler.setPrototypeOf()
+  Object.setPrototypeOf 方法的捕捉器。
+  handler.isExtensible()
+  Object.isExtensible 方法的捕捉器。
+  handler.preventExtensions()
+  Object.preventExtensions 方法的捕捉器。
+  handler.getOwnPropertyDescriptor()
+  Object.getOwnPropertyDescriptor 方法的捕捉器。
+  handler.defineProperty()
+  Object.defineProperty 方法的捕捉器。
+  handler.has()
+  in 操作符的捕捉器。
+  handler.get()
+  属性读取操作的捕捉器。
+  handler.set()
+  属性设置操作的捕捉器。
+  handler.deleteProperty()
+  delete 操作符的捕捉器。
+  handler.ownKeys()
+  Object.getOwnPropertyNames 方法和 Object.getOwnPropertySymbols 方法的捕捉器。
+  handler.apply()
+  函数调用操作的捕捉器。
+  handler.construct()
+  new 操作符的捕捉器。
+  一些不标准的捕捉器已经被废弃并且移除了。
+</div>
+<div id="drag" style="vertical-align: middle;width: 50px;height: 50px;display: inline-block;background: pink;"></div>
+
+
+<script>
+
+  const $ = (el) => {
+    return document.querySelector(el);
+  }
+
+  // 定义存放range数据数组`ranges`
+  let ranges = [];
+  let drag = $('#drag');
+  let baseX = 0, baseY = 0;
+
+  document.addEventListener('selectstart', e => e.preventDefault());
+
+  drag.addEventListener('mousedown', event => {
+    let startX = event.clientX, startY = event.clientY;
+    const move = event => {
+      // 在`move`函数中获取到距离div中近的`range`，
+      let range = getNearest(event.clientX, event.clientY);
+      // 并将`range`插入到该位置中
+      range.insertNode(drag);
+    }
+    const up = event => {
+      baseX = baseX + event.clientX - startX;
+      baseY = baseY + event.clientY - startY;
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    }
+
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+
+  });
+
+  const content = $('#content');
+
+  // 将所有文本内容添加到`ranges`数组中
+  for (let i = 0; i < content.childNodes[0].textContent.length; i++) {
+    let range = document.createRange();
+    range.setStart(content.childNodes[0], i);
+    range.setEnd(content.childNodes[0], i);
+    ranges.push(range);
+  }
+
+  // 获取最近的range
+  function getNearest(x, y) {
+    let min = Infinity;
+    let nearest = null;
+
+    for (let range of ranges) {
+      let rect = range.getBoundingClientRect();
+      let distance = (rect.x - x) ** 2 + (rect.y - y) ** 2;
+      if (distance < min) {
+        nearest = range;
+        min = distance;
+      }
+    }
+    return nearest;
+  }
+
+</script>
+```
+![运行效果](../week12/img/4.gif)
