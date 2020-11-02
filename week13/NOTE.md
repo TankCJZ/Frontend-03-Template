@@ -36,12 +36,12 @@ Property:
 div.name = 'xxx';
 ```
 #### Lifecycle 
-组件生命周期，created 和 destroyed 是必不可少的，表示创建和销毁事件，当然不同的设计者会增加一些其他生命周期函数   
+组件生命周期，created 和 destroyed 是必不可少的，表示组件创建和销毁事件，当然不同的设计者会增加一些其他生命周期函数   
 例如Vue 中就增加了更细致的事件： beforeMount, mounted, update beforeCreated beforeDestroyed ...   
 
 ## 组件系统环境搭建
 接下来就是开始组件环境的搭建，我们会介绍vue 和 react 两种风格的搭建   
-### JSX 组件开发环境
+### React JSX 组件开发环境
 安装`webpack webpack-cli @babel/core @babel/preset-env babel-loader @babel/plugin-transform-react-jsx`   
 
 ```javascript
@@ -90,11 +90,11 @@ module.exports = {
 ```
 > @babel/plugin-transform-react-jsx 插件是关键，用来编译jsx的
 
-编译成功后/dist/main.js中出现：   
+编译成功后`/dist/main.js`中出现：   
 `eval("var a = /*#__PURE__*/React.createElement(\"div\", null);\n\n//# sourceURL=webpack:///./main.js?");`
 
 ### JSX 基本使用
-`@babel/plugin-transform-react-jsx`默认会调用`React.createElement`方法来编译`jsx`代码，我们不需要使用React我们需要定义自己的`createElement`函数,在webpack.config.js修改plugins配置项的值为如下，表示使用`createElement`来编译`jsx`:   
+`@babel/plugin-transform-react-jsx`默认会调用`React.createElement`方法来编译`jsx`代码，我们不需要使用`React`我们定义自己的`createElement`函数,在`webpack.config.js`修改`plugins`配置项的值为如下，表示使用`createElement`来编译`jsx`:   
 ```javascript
 module.exports = {
     entry: './main.js',
@@ -117,7 +117,7 @@ module.exports = {
     }
 };
 ```
-接着`main.js`中定义`createElement`函数   
+新建`main.js`编写一个`createElement`空函数   
 ```javascript
 //main.js
 function createElement() {
@@ -130,7 +130,7 @@ let a = <div id="nams">
 </div>;
 
 ```
-在`chrome`浏览器中`Sources-webpack://./main.js`编译结果：   
+新建`index.html`引入`/dist/index.js`使用`chrome`打开在`chrome`浏览器中`Sources-webpack://./main.js`编译结果：   
 ```javascript
 function createElement() {
   return;
@@ -222,7 +222,7 @@ class Div {
 }
 ```
 > 增加了一个mountTo方法用于挂载DOM
-**这样我们使用大写`Div`也是可以成功创建DOM
+**这样我们使用大写`Div`也是可以成功创建DOM**
 事实上我不仅需要给`Div`做封装，还需要给文本节点创建和普通节点创建做一层封装:   
 ```javascript
 function createElement(type, attributes, ...children) {
@@ -298,7 +298,7 @@ let a = <Div id="nams">
 a.mountTo(document.body);
 
 ```
-> 注意： document.body.appendChild需要改成 使用 组件的mountTo方法
+> 注意： `document.body.appendChild`需要改成 使用 组件的`mountTo`方法
 **组件系统的封装：** 最后我们需要将`ElementWrapper TextWrapper`进行整合封装，目的是抽离出**重复代码**   
 ```javascript
 // Component.js
