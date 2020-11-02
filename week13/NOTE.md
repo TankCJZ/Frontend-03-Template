@@ -142,3 +142,84 @@ var a = createElement("div", {
 
 ```
 > `html`代码将使用`createElement`函数来创建.
+
+`createElement`第一版本：   
+* 函数接受三个参数 `type` DOM类型 `attributes` 属性对象 `children` 子节点类
+* 创建DOM
+* 设置属性
+* 添加子节点
+```javascript
+/**
+ * 
+ * @param {String} type 节点类型
+ * @param {Object} attributes 节点属性
+ * @param  {...Object} children 子节点
+ */
+function createElement(type, attributes, ...children) {
+  // 创建DOM
+  let element = document.createElement(type);
+  // 增加属性
+  for (let name in attributes) {
+    element.setAttribute(name, attributes[name]);
+  }
+  // 增加子节点
+  for (let child of children) {
+    // 文本类型字节点处理
+    if (typeof child === 'string') {
+      child = document.createTextNode(child);
+    }
+    element.appendChild(child);
+  }
+  return element;
+}
+
+let a = <div id="nams">
+  <span>1</span>
+</div>;
+
+console.log(a)
+document.body.appendChild(a); // 添加到body中
+```
+> 字节点问纯文本时候需要创建文本节点
+
+`main.js`中`div`如果改成大写，则会出现问题，createElement的第一个参数type变成了对象，实际上是一个组件      
+```javascript
+// main.js
+let a = <Div id="nams">
+  <span>1</span>
+</Div>;
+// webpack main.js
+var a = createElement(Div, {
+  id: "nams"
+}, createElement("span", null, "1"));
+```
+也就是说我们必须实现名字为`Div`的类，并且必须实现`setAttribute appendChild `等DOM对象存在的方法并且需要修改`createElement`创建DOM的逻辑：   
+```javascript
+function createElement(type, attributes, ...children) {
+  let element = null;
+  if (typeof type === 'string') {
+    element = document.createElement(type);
+  } else {
+    // 实例化组件对象
+    element = new type;
+  }
+  ....
+}
+// Div组件
+class Div {
+  constructor() {
+    this.root = document.createElement("div");
+  }
+  setAttribute(name, value) {
+    this.root.setAttribute(name, value);
+  }
+  appendChild(child) {
+    this.root.appendChild(child);
+  }
+  mountTo(parent) {
+    parent.appendChild(this.root);
+  }
+}
+```
+> 增加了一个mountTo方法用于挂载DOM
+**这样我们使用大写`Div`也是可以成功创建DOM
