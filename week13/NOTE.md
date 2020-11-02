@@ -223,3 +223,71 @@ class Div {
 ```
 > 增加了一个mountTo方法用于挂载DOM
 **这样我们使用大写`Div`也是可以成功创建DOM
+事实上我不仅需要给`Div`做封装，还需要给文本节点创建和普通节点创建做一层封装:   
+```javascript
+function createElement(type, attributes, ...children) {
+  let element = null;
+  if (typeof type === 'string') {
+    // 使用ElementWrapper 来创建
+    element = new ElementWrapper(type);
+  } else {
+    element = new type;
+  }
+  for (let name in attributes) {
+    element.setAttribute(name, attributes[name]);
+  }
+  for (let child of children) {
+    if (typeof child === 'string') {
+      // 使用 TextWrapper来创建
+      child = new TextWrapper(child);
+    }
+    element.appendChild(child);
+  }
+  return element;
+}
+// 文本组件
+class TextWrapper {
+  constructor(content) {
+    this.root = document.createTextNode(content);
+  }
+  setAttribute(name, value) {
+    this.root.setAttribute(name, value);
+  }
+  appendChild(child) {
+    child.mountTo(this.root);
+  }
+  mountTo(parent) {
+    parent.appendChild(this.root);
+  }
+}
+// 普通组件包装 主要是DOM 类型组件封装
+class ElementWrapper {
+  constructor(type) {
+    this.root = document.createElement(type);
+  }
+  setAttribute(name, value) {
+    this.root.setAttribute(name, value);
+  }
+  appendChild(child) {
+    child.mountTo(this.root);
+  }
+  mountTo(parent) {
+    parent.appendChild(this.root);
+  }
+}
+// Div组件 这里主要是是用户自定义组件
+class Div {
+  constructor() {
+    this.root = document.createElement("div");
+  }
+  setAttribute(name, value) {
+    this.root.setAttribute(name, value);
+  }
+  appendChild(child) {
+    child.mountTo(this.root);
+  }
+  mountTo(parent) {
+    parent.appendChild(this.root);
+  }
+}
+```
