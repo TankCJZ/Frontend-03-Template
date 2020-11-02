@@ -290,4 +290,116 @@ class Div {
     parent.appendChild(this.root);
   }
 }
+
+let a = <Div id="nams">
+  <span>1</span>
+</Div>;
+
+a.mountTo(document.body);
+
 ```
+> 注意： document.body.appendChild需要改成 使用 组件的mountTo方法
+**组件系统的封装：** 最后我们需要将`ElementWrapper TextWrapper`进行整合封装，目的是抽离出**重复代码**   
+```javascript
+// Component.js
+/**
+ * 
+ * @param {String || Object} type 节点类型
+ * @param {Object} attributes 节点属性
+ * @param  {...Object} children 子节点
+ */
+export function createElement(type, attributes, ...children) {
+  let element = null;
+  if (typeof type === 'string') {
+    element = new ElementWrapper(type);
+  } else {
+    element = new type;
+  }
+  for (let name in attributes) {
+    element.setAttribute(name, attributes[name]);
+  }
+  for (let child of children) {
+    if (typeof child === 'string') {
+      child = new TextWrapper(child);
+    }
+    element.appendChild(child);
+  }
+  return element;
+}
+
+export class Component {
+  // constructor() {
+  //   this.root = this.render();
+  // }
+  setAttribute(name, value) {
+    this.root.setAttribute(name, value);
+  }
+  appendChild(child) {
+    child.mountTo(this.root);
+  }
+  mountTo(parent) {
+    parent.appendChild(this.root);
+  }
+}
+
+class TextWrapper extends Component{
+  constructor(content) {
+    this.root = document.createTextNode(content);
+  }
+}
+
+class ElementWrapper extends Component {
+  constructor(type) {
+    this.root = document.createElement(type);
+  }
+}
+
+```
+### 轮播图组件开发一
+* 组件提供`src` 属性传递图片数组
+* 组件接受`src` 并且在`render`函数中绘制出来
+```javascript
+import { Component, createElement } from './Component.js';
+
+class Swiper extends Component {
+  constructor() {
+    super();
+    // 创建存放外部传递属性的attributes对象 
+    this.attributes = Object.create(null);
+  }
+  setAttribute(name, value) {
+    // 保存属性
+    this.attributes[name] = value;
+  }
+  mountTo(parent) {
+    parent.appendChild(this.render());
+  }
+  render() {
+    this.root = document.createElement('div');
+    // 遍历属性src 并且创建img追加到root中
+    for (let record of this.attributes.src) {
+      let imgEle = document.createElement('img');
+      imgEle.src = record;
+      this.root.appendChild(imgEle);
+    }
+    return this.root;
+  }
+}
+
+let d = [
+  'https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg',
+  'https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg',
+  'https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg',
+  'https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg',
+];
+
+// 组件的使用
+let s = <Swiper src={d}></Swiper>
+s.mountTo(document.body);
+
+```
+> 使用Object.create(null)会创建一个干净没有原型的对象
+
+### 轮播图组件开发二
+接着继续开发轮播图布局和自动轮播效果   
+

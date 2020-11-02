@@ -1,75 +1,33 @@
-/**
- * 
- * @param {String || Object} type 节点类型
- * @param {Object} attributes 节点属性
- * @param  {...Object} children 子节点
- */
-function createElement(type, attributes, ...children) {
-  let element = null;
-  if (typeof type === 'string') {
-    element = new ElementWrapper(type);
-  } else {
-    element = new type;
-  }
-  for (let name in attributes) {
-    element.setAttribute(name, attributes[name]);
-  }
-  for (let child of children) {
-    if (typeof child === 'string') {
-      child = new TextWrapper(child);
-    }
-    element.appendChild(child);
-  }
-  return element;
-}
+import { Component, createElement } from './Component.js';
 
-class TextWrapper {
-  constructor(content) {
-    this.root = document.createTextNode(content);
-  }
-  setAttribute(name, value) {
-    this.root.setAttribute(name, value);
-  }
-  appendChild(child) {
-    child.mountTo(this.root);
-  }
-  mountTo(parent) {
-    parent.appendChild(this.root);
-  }
-}
-
-class ElementWrapper {
-  constructor(type) {
-    this.root = document.createElement(type);
-  }
-  setAttribute(name, value) {
-    this.root.setAttribute(name, value);
-  }
-  appendChild(child) {
-    child.mountTo(this.root);
-  }
-  mountTo(parent) {
-    parent.appendChild(this.root);
-  }
-}
-
-class Div {
+class Swiper extends Component {
   constructor() {
-    this.root = document.createElement("div");
+    super();
+    this.attributes = Object.create(null);
   }
   setAttribute(name, value) {
-    this.root.setAttribute(name, value);
-  }
-  appendChild(child) {
-    child.mountTo(this.root);
+    this.attributes[name] = value;
   }
   mountTo(parent) {
-    parent.appendChild(this.root);
+    parent.appendChild(this.render());
+  }
+  render() {
+    this.root = document.createElement('div');
+    for (let record of this.attributes.src) {
+      let imgEle = document.createElement('img');
+      imgEle.src = record;
+      this.root.appendChild(imgEle);
+    }
+    return this.root;
   }
 }
 
-let a = <Div id="nams">
-  <span>1</span>
-</Div>;
+let d = [
+  'https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg',
+  'https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg',
+  'https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg',
+  'https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg',
+];
 
-a.mountTo(document.body);
+let s = <Swiper src={d}></Swiper>
+s.mountTo(document.body);
