@@ -402,4 +402,98 @@ s.mountTo(document.body);
 
 ### 轮播图组件开发二
 接着继续开发轮播图布局和自动轮播效果   
+```html
+<style>
+  .swiper {
+    width: 500px;
+    height: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .swiper>.item{
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    transition: ease .5s;
+  }
+</style>
+```
+> 使用inline-block 让 item显示成一行并且增加了过渡效果
+
+**JS部分使用`setInterval`改变`translateX`实现轮播** `render`函数如下：   
+```javascript
+render() {
+  this.root = document.createElement('div');
+  this.root.classList.add('swiper');
+  for (let record of this.attributes.src) {
+    let imgEle = document.createElement('div');
+    imgEle.classList.add('item');
+    imgEle.style.backgroundImage = `url(${record})`;
+    this.root.appendChild(imgEle);
+  }
+
+  let current = 0;
+  setInterval(() => {
+    let children = this.root.children;
+    ++current;
+    current %= children.length;
+    for (let child of children) {
+      child.style.transform = `translateX(-${current * 100}%)`;
+    }
+  }, 3000);
+
+  return this.root;
+}
+```
+> 小技巧：使用%运算符计算出current值
+
+### 轮播图组件开发二 - 无缝切换
+无缝切换实现思路：   
+* 计算当前显示的图标下标`currentIndex`和下一张`nextIndex`图下标
+* 处理下一张图`next`位置，接着下下一帧处理当前`current`图标位置
+* 最后将下一张图坐标赋值给`current`
+
+只需要改动`render`函数：   
+```javascript
+render() {
+  this.root = document.createElement('div');
+  this.root.classList.add('swiper');
+  for (let record of this.attributes.src) {
+    let imgEle = document.createElement('div');
+    imgEle.classList.add('item');
+    imgEle.style.backgroundImage = `url(${record})`;
+    this.root.appendChild(imgEle);
+  }
+
+  // 当前图标位置
+  let currentIndex = 0;
+  setInterval(() => {
+    let children = this.root.children;
+    // 下一张图位置
+    let nextIndex = (currentIndex + 1) % children.length;
+
+    // 当前图
+    let current = children[currentIndex];
+    // 下一张图
+    let next = children[nextIndex];
+
+    next.style.transition = 'none';
+    next.style.transform = `translateX(${100 - nextIndex * 100}%)`;
+
+    setTimeout(() => {
+      
+      next.style.transition = '';
+      current.style.transform = `translateX(${-100 - currentIndex * 100}%)`;
+      next.style.transform = `translateX(${- nextIndex * 100}%)`;
+
+      currentIndex = nextIndex;
+    }, 16);
+
+  }, 3000);
+
+  return this.root;
+}
+```
+
 

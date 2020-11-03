@@ -13,11 +13,40 @@ class Swiper extends Component {
   }
   render() {
     this.root = document.createElement('div');
+    this.root.classList.add('swiper');
     for (let record of this.attributes.src) {
-      let imgEle = document.createElement('img');
-      imgEle.src = record;
+      let imgEle = document.createElement('div');
+      imgEle.classList.add('item');
+      imgEle.style.backgroundImage = `url(${record})`;
       this.root.appendChild(imgEle);
     }
+
+    let currentIndex = 0;
+    setInterval(() => {
+      let children = this.root.children;
+      let nextIndex = (currentIndex + 1) % children.length;
+
+      let current = children[currentIndex];
+      let next = children[nextIndex];
+
+      next.style.transition = 'none';
+      console.log('------------------------')
+      console.log('next', 100 - nextIndex * 100)
+      next.style.transform = `translateX(${100 - nextIndex * 100}%)`;
+
+      setTimeout(() => {
+        
+        next.style.transition = '';
+        console.log('current', -100 - currentIndex * 100)
+        current.style.transform = `translateX(${-100 - currentIndex * 100}%)`;
+        console.log('next', - nextIndex * 100)
+        next.style.transform = `translateX(${- nextIndex * 100}%)`;
+
+        currentIndex = nextIndex;
+      }, 16);
+
+    }, 3000);
+
     return this.root;
   }
 }
