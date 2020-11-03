@@ -21,7 +21,38 @@ class Swiper extends Component {
       this.root.appendChild(imgEle);
     }
 
-    let currentIndex = 0;
+    // 鼠标拖动切换
+    let position = 0;
+    this.root.addEventListener('mousedown', e => {
+      let children = this.root.children;
+      let startX = e.clientX;
+
+      let move = event => {
+        let x = event.clientX - startX;
+        for (let child of  children) {
+          child.style.transition = 'none';
+          child.style.transform = `translateX(${-position * 500 + x}px)`;
+        }
+      }
+
+      let up = event => {
+        let x = event.clientX - startX;
+        position = position - Math.round(x / 500);
+
+        for (let child of children) {
+          child.style.transition = '';
+          child.style.transform = `translateX(${- position * 500}px)`;
+        }
+
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+      }
+
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+
+    /* let currentIndex = 0;
     setInterval(() => {
       let children = this.root.children;
       let nextIndex = (currentIndex + 1) % children.length;
@@ -45,7 +76,7 @@ class Swiper extends Component {
         currentIndex = nextIndex;
       }, 16);
 
-    }, 3000);
+    }, 3000); */
 
     return this.root;
   }

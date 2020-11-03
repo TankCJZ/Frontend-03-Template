@@ -495,5 +495,73 @@ render() {
   return this.root;
 }
 ```
+### 轮播图组件开发三 - 鼠标拖动切换
+1.事件监听：   
+```javascript
+// 鼠标拖动切换
+this.root.addEventListener('mousedown', e => {
+  console.log('down')
 
+  let move = (e) => {
+    console.log('move')
+  }
 
+  let up = (e) => {
+    console.log('up');
+
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  }
+
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+});
+```
+> 小细节： 监听document 而不是this.root 这样在脱离div甚至浏览器外也能触发到mouseup
+鼠标拖拽实现代码：   
+```javascript
+render() {
+  // ...
+  // 鼠标拖动切换
+  // 记录上一次拖动的位置
+  let position = 0;
+  this.root.addEventListener('mousedown', e => {
+    let children = this.root.children;
+    let startX = e.clientX; //开始位置
+
+    let move = event => {
+      // 移动图片
+      let x = event.clientX - startX;
+      
+      for (let child of  children) {
+        child.style.transition = 'none';
+        // 原来的位置 -position * 500 加上 x
+        child.style.transform = `translateX(${-position * 500 + x}px)`;
+      }
+    }
+
+    let up = event => {
+      let x = event.clientX - startX;
+      // 当x >= 250 则Math.round(x / 500) = -1 则position 减-1相当于+1
+      // 当x < 250 则Math.round(x / 500) = 0 则position 相当于不变
+
+      position = position - Math.round(x / 500);
+      
+      // 如果超出一半则切换，否则恢复当前图片位置
+      for (let child of children) {
+        child.style.transition = '';
+        child.style.transform = `translateX(${- position * 500}px)`;
+      }
+
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    }
+
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+
+  return this.root;
+}
+```
+> 这里position 逻辑需要多次console.log 来查看实现原理
