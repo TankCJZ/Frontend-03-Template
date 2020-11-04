@@ -181,8 +181,7 @@ console.log(a)
 document.body.appendChild(a); // 添加到body中
 ```
 > 字节点问纯文本时候需要创建文本节点
-
-`main.js`中`div`如果改成大写，则会出现问题，createElement的第一个参数type变成了对象，实际上是一个组件      
+第一版已经成功显示出dom节点信息了，接着问题出现了 `main.js`中`div`如果改成大写，则会出现问题，createElement的第一个参数type变成了对象，实际上是一个组件      
 ```javascript
 // main.js
 let a = <Div id="nams">
@@ -518,7 +517,7 @@ this.root.addEventListener('mousedown', e => {
 });
 ```
 > 小细节： 监听document 而不是this.root 这样在脱离div甚至浏览器外也能触发到mouseup
-鼠标拖拽实现代码：   
+2.鼠标拖拽实现代码：   
 ```javascript
 render() {
   // ...
@@ -565,3 +564,5 @@ render() {
 }
 ```
 > 这里position 逻辑需要多次console.log 来查看实现原理
+
+3.边界的处理：   
