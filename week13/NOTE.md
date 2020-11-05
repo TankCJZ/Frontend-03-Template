@@ -448,7 +448,7 @@ render() {
 > 小技巧：使用%运算符计算出current值
 
 ### 轮播图组件开发二 - 无缝切换
-无缝切换实现思路：   
+无缝切换实现思路：每次只显示当前图片和下一张图片，所有我们只需要切换显示当前图片和下一张图片      
 * 计算当前显示的图标下标`currentIndex`和下一张`nextIndex`图下标
 * 处理下一张图`next`位置，接着下下一帧处理当前`current`图标位置
 * 最后将下一张图坐标赋值给`current`
@@ -476,16 +476,16 @@ render() {
     let current = children[currentIndex];
     // 下一张图
     let next = children[nextIndex];
-
+    // 处理下一张图片位置
     next.style.transition = 'none';
     next.style.transform = `translateX(${100 - nextIndex * 100}%)`;
 
     setTimeout(() => {
-      
+      // 处理当前图片位置
       next.style.transition = '';
       current.style.transform = `translateX(${-100 - currentIndex * 100}%)`;
       next.style.transform = `translateX(${- nextIndex * 100}%)`;
-
+      
       currentIndex = nextIndex;
     }, 16);
 
