@@ -40,7 +40,7 @@ export class Listener {
         // event.buttons 表示所有按下的键值 之和 =>多个
         // event.button 表示当前按下的键的值 =>单个
         while (button <= event.buttons) {
-          if (button & event.buttons) {
+          if (button && event.buttons) {
             let key;
             if (button === 2) {
               key = 4;
@@ -146,12 +146,13 @@ export class Recognize {
   
   }
   move(point, context){
+    
     // 记录移动信息
     let mx = point.clientX - context.startX;
     let my = point.clientY - context.startY;
   
     // 当不在pan事件，并且移动距离大于10px 则触发pan事件
-    if (!context.isPan && mx ** 2 + my ** 2 > PAN_START_DISTANCE ** 2) {
+    if (!context.isPan && ((mx ** 2 + my ** 2) > PAN_START_DISTANCE ** 2)) {
       context.isTap = false;
       context.isPress = false;
       context.isPan = true;
@@ -166,7 +167,7 @@ export class Recognize {
       // 清除press定时器
       clearTimeout(context.handler);
     }
-  
+
     if (context.isPan) {
       this.dispatcher.dispatch('pan', {
         startX: context.startX,

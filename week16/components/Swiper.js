@@ -16,7 +16,6 @@ export class Swiper extends Component {
     this.children = this[ATTRIBUTE].list.map(this.template);
     this.root = (<div class="swiper">{this.children}</div>).render();
 
-
     // this.root = document.createElement('div');
     // this.root.classList.add('swiper');
     // for (let record of this[ATTRIBUTE].src) {

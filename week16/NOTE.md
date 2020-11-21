@@ -1,5 +1,5 @@
 # 手势系统的应用
-本次学习目标：将手势系统和动画系统应用到轮播图组件中.   
+本次学习目标：将手势系统和动画系统应用到轮播图组件中.完善组件的属性和事件的支持   
 
 ## 使用手势系统
 首先将轮播组件的事件替换成手势系统的事件：   
@@ -87,7 +87,7 @@ export class Recognize {
 
 ```
 ## 引入动画系统
-* 在`render`一开始就启动`timeLine`,将`setInterval`中的动画实现代码替换成`timeLine + Animation`的形式
+* 在`render`中创建`timeLine`并且`start`,将`setInterval`中的动画实现代码替换成`timeLine + Animation`的形式
 * 当发生手势系统`start`函数触发，则需要暂停`timeLine`的播放
 * 当手势系统结束`end`函数触发，则需要重启`timeLine`的播放
 * `timeLine`的重新启动需要计算出上一次移动距离`ax`以及`position`的计算
@@ -174,7 +174,7 @@ handler = setInterval(nextPicture, 3000);
 
 });
 ```
-> direction 和 position 比较蒙蔽状态—_- 
+> direction 和 position 的计算还是 比较蒙蔽状态-_- 
 
 ## 给组件添加一些属性
 组件增加属性支持需要对`Component`进行调整，增加`attributes state`字段，也就是我们常见的属性和状态，这样轮播组件即可直接添加属性到`state`中：   
@@ -214,8 +214,8 @@ this[STATE].position = 0;
 
 ```
 ## 给组件添加事件功能
-完成属性添加后，还有一个基本功能事件的绑定，我们需要实现轮播组件可以绑定`onClick onChange`这种事件，同样是在`Component`组件下做调整： 
-在Component中增加一个triggerEvent方法**使用原生`CustomEvent`**,正则将首字母转大写:   
+完成属性添加后，接着给组件增加事件，我们需要实现轮播组件可以绑定`onClick onChange`两个事件，同样是在`Component`组件下做调整： 
+在Component中增加一个`triggerEvent`方法来触发事件**使用原生`CustomEvent`**,正则将事件名首字母转大写:   
 ```javascript
 triggerEvent(type, args) {
   this[ATTRIBUTE]["on" + type.replace(/^[\s\S]/, s => s.toUpperCase())](new CustomEvent(type, {
@@ -272,7 +272,7 @@ export class Button extends Component {
   }
 }
 
-// Component.js
+//Component.js
 export class Component {
   constructor() {
     this[ATTRIBUTE] = Object.create(null);
@@ -355,7 +355,7 @@ export function createElement(type, attributes, ...children) {
   let processChild = (children) => {
     for (let child of children) {
       if ((typeof child === 'object') && (child instanceof Array)) {
-        // 如果是数组则递归创建
+        // 如果是数组则继续递归创建
         processChild(child);
         continue;
       }
@@ -428,3 +428,5 @@ class ElementWrapper extends Component {
   }
 </style>
 ```
+## 总结
+本周重点是学习将复杂的逻辑拆分成多个功能来实现，并且能组装起来。
